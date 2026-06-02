@@ -1,0 +1,10 @@
+{
+  "name": "codelegion-api",
+  "version": "1.0.0",
+  "description": "Azure Functions API for CodeLegion briefing authentication",
+  "engines": { "node": ">=18" },
+  "dependencies": {
+    "@azure/identity": "^4.5.0",
+    "@azure/keyvault-secrets": "^4.9.0"
+  }
+}

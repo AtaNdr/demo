@@ -64,7 +64,7 @@ git push origin main      # GitHub Actions picks up and deploys to Azure Static 
 ## Gotchas
 
 - The repo has **no `package.json`, `go.mod`, or `requirements.txt`** — there are no dependencies to install. Don't run `npm install` or similar.
-- `KNOWN_ISSUES.md`, `LESSONS.md`, `DESIGN_DEFAULTS.md`, and `DO_NOT_TOUCH.md` all contain placeholder examples rather than real project-specific entries. These are template stubs — do not treat the examples as real facts about this repo.
+- `KNOWN_ISSUES.md` and `LESSONS.md` initially contain example entries to demonstrate format — treat only entries dated and issue-referenced as real fleet knowledge. `DESIGN_DEFAULTS.md` and `DO_NOT_TOUCH.md` contain real, authoritative content.
 - The `index.html` uses `overflow: hidden` on `body` intentionally — the slide deck fills the viewport and scroll is suppressed by design.
 - The `.github/CODEOWNERS` file references `@AtaNdr/maintainers` as a placeholder — replace with real team handles before relying on CODEOWNERS enforcement.
 - Azure Static Web Apps has a `gentle-forest-0098b6810` subdomain; this is auto-assigned by Azure and is not meaningful to change.

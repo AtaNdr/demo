@@ -35,24 +35,10 @@ function mintJWT(signingSecret, ttlSeconds) {
   return `${header}.${payload}.${signature}`;
 }
 
-function parseCredentials(jsonStr) {
-  try {
-    const creds = JSON.parse(jsonStr);
-    if (typeof creds.user !== 'string' || typeof creds.pass !== 'string') return null;
-    return creds;
-  } catch {
-    return null;
-  }
-}
-
-// Key Vault secret names: 1-127 chars, alphanumeric + hyphens, no leading/trailing hyphen.
-// Also reject names reserved for internal setup secrets.
-const RESERVED = new Set(['codelegion-setup', 'jwt-signing-secret']);
-
+// 1-127 chars, starts with alphanumeric, allows alphanumeric and hyphens.
 function validateUsername(username) {
   if (typeof username !== 'string') return false;
-  if (!(/^[a-zA-Z0-9][a-zA-Z0-9-]{0,126}$/.test(username))) return false;
-  return !RESERVED.has(username);
+  return /^[a-zA-Z0-9][a-zA-Z0-9-]{0,126}$/.test(username);
 }
 
-module.exports = { safeEqual, base64url, mintJWT, parseCredentials, validateUsername };
+module.exports = { safeEqual, base64url, mintJWT, validateUsername };

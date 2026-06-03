@@ -7,7 +7,6 @@
     "test": "node login/index.test.js"
   },
   "dependencies": {
-    "@azure/identity": "^4.5.0",
-    "@azure/keyvault-secrets": "^4.9.0"
+    "@azure/identity": "^4.5.0"
   }
 }

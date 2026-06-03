@@ -1,29 +1,14 @@
 'use strict';
 
-const { DefaultAzureCredential } = require('@azure/identity');
-const { SecretClient } = require('@azure/keyvault-secrets');
-const { safeEqual, mintJWT, parseCredentials } = require('./core');
+const { safeEqual, mintJWT } = require('./core');
+const { listSettings, getConfig, KEYS } = require('../appsettings');
 
-const VAULT_URI = process.env.KEY_VAULT_URI;
-const JWT_SECRET_NAME = process.env.JWT_SECRET_NAME || 'jwt-signing-secret';
 const TOKEN_TTL_SECONDS = 8 * 60 * 60;
-
-let secretClient;
-function getClient() {
-  if (!secretClient) {
-    secretClient = new SecretClient(VAULT_URI, new DefaultAzureCredential());
-  }
-  return secretClient;
-}
-
-const CORS = {
-  'Content-Type': 'application/json',
-  'Access-Control-Allow-Origin': '*',
-};
+const CORS = { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' };
 
 module.exports = async function login(context, req) {
-  if (!VAULT_URI) {
-    context.log.error('KEY_VAULT_URI is not set');
+  if (!getConfig()) {
+    context.log.error('ARM configuration missing');
     context.res = { status: 500, headers: CORS, body: { error: 'Server configuration error.' } };
     return;
   }
@@ -35,42 +20,28 @@ module.exports = async function login(context, req) {
   }
 
   try {
-    const client = getClient();
-    let credSecret, jwtSecret;
-
-    try {
-      [credSecret, jwtSecret] = await Promise.all([
-        client.getSecret(username),
-        client.getSecret(JWT_SECRET_NAME),
-      ]);
-    } catch (err) {
-      if (err.statusCode === 404) {
-        context.res = { status: 404, headers: CORS, body: { error: 'No credentials configured.', needsSetup: true } };
-        return;
-      }
-      throw err;
+    const settings = await listSettings();
+    if (!settings || !settings[KEYS.SETUP]) {
+      context.res = { status: 404, headers: CORS, body: { error: 'No credentials configured.', needsSetup: true } };
+      return;
     }
 
-    const creds = parseCredentials(credSecret.value);
-    if (!creds) {
-      context.log.error('Credential secret is not valid JSON with user/pass fields');
+    const storedUsername = settings[KEYS.USERNAME];
+    const storedPassword = settings[KEYS.PASSWORD];
+    const jwtSecret = settings[KEYS.JWT_SECRET];
+
+    if (!storedUsername || !storedPassword || !jwtSecret) {
+      context.log.error('Credential settings incomplete');
       context.res = { status: 500, headers: CORS, body: { error: 'Server configuration error.' } };
       return;
     }
 
-    const usernameOk = safeEqual(username, creds.user);
-    const passwordOk = safeEqual(password, creds.pass);
-
-    if (!usernameOk || !passwordOk) {
+    if (!safeEqual(username, storedUsername) || !safeEqual(password, storedPassword)) {
       context.res = { status: 401, headers: CORS, body: { error: 'Incorrect username or password.' } };
       return;
     }
 
-    context.res = {
-      status: 200,
-      headers: CORS,
-      body: { token: mintJWT(jwtSecret.value, TOKEN_TTL_SECONDS) },
-    };
+    context.res = { status: 200, headers: CORS, body: { token: mintJWT(jwtSecret, TOKEN_TTL_SECONDS) } };
   } catch (err) {
     context.log.error('Login error:', err.message);
     context.res = { status: 500, headers: CORS, body: { error: 'An unexpected error occurred. Please try again.' } };

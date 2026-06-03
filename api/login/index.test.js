@@ -4,7 +4,7 @@
 // No test framework required — pure Node.js assert
 
 const assert = require('assert');
-const { safeEqual, base64url, mintJWT } = require('./core');
+const { safeEqual, base64url, mintJWT, parseCredentials, validateUsername } = require('./core');
 
 let pass = 0;
 let fail = 0;
@@ -119,6 +119,93 @@ test('mintJWT: same secret, different TTL produces different payload', () => {
 test('mintJWT: token signature is not present in base64url output as +/=', () => {
   const token = mintJWT('s3cr3t', 3600);
   assert.ok(!/[+/=]/.test(token), 'full token must be URL-safe');
+});
+
+// ── parseCredentials ─────────────────────────────────────────────────────────
+
+test('parseCredentials: valid JSON with user and pass returns object', () => {
+  const result = parseCredentials('{"user":"alice","pass":"s3cret"}');
+  assert.deepStrictEqual(result, { user: 'alice', pass: 's3cret' });
+});
+
+test('parseCredentials: missing user field returns null', () => {
+  assert.strictEqual(parseCredentials('{"pass":"s3cret"}'), null);
+});
+
+test('parseCredentials: missing pass field returns null', () => {
+  assert.strictEqual(parseCredentials('{"user":"alice"}'), null);
+});
+
+test('parseCredentials: non-string user returns null', () => {
+  assert.strictEqual(parseCredentials('{"user":1,"pass":"s3cret"}'), null);
+});
+
+test('parseCredentials: invalid JSON returns null', () => {
+  assert.strictEqual(parseCredentials('not-json'), null);
+});
+
+test('parseCredentials: empty string returns null', () => {
+  assert.strictEqual(parseCredentials(''), null);
+});
+
+test('parseCredentials: extra fields are preserved', () => {
+  const result = parseCredentials('{"user":"alice","pass":"s3cret","extra":"value"}');
+  assert.ok(result !== null);
+  assert.strictEqual(result.user, 'alice');
+  assert.strictEqual(result.pass, 's3cret');
+});
+
+// ── validateUsername ──────────────────────────────────────────────────────────
+
+test('validateUsername: simple alphanumeric accepted', () => {
+  assert.strictEqual(validateUsername('alice'), true);
+});
+
+test('validateUsername: alphanumeric with hyphen accepted', () => {
+  assert.strictEqual(validateUsername('alice-admin'), true);
+});
+
+test('validateUsername: single character accepted', () => {
+  assert.strictEqual(validateUsername('a'), true);
+});
+
+test('validateUsername: empty string rejected', () => {
+  assert.strictEqual(validateUsername(''), false);
+});
+
+test('validateUsername: leading hyphen rejected', () => {
+  assert.strictEqual(validateUsername('-alice'), false);
+});
+
+test('validateUsername: underscore rejected (not allowed in KV secret names)', () => {
+  assert.strictEqual(validateUsername('alice_admin'), false);
+});
+
+test('validateUsername: spaces rejected', () => {
+  assert.strictEqual(validateUsername('alice admin'), false);
+});
+
+test('validateUsername: non-string rejected', () => {
+  assert.strictEqual(validateUsername(42), false);
+  assert.strictEqual(validateUsername(null), false);
+});
+
+test('validateUsername: reserved name codelegion-setup rejected', () => {
+  assert.strictEqual(validateUsername('codelegion-setup'), false);
+});
+
+test('validateUsername: reserved name jwt-signing-secret rejected', () => {
+  assert.strictEqual(validateUsername('jwt-signing-secret'), false);
+});
+
+test('validateUsername: 127-char name accepted', () => {
+  const name = 'a' + 'b'.repeat(126);
+  assert.strictEqual(validateUsername(name), true);
+});
+
+test('validateUsername: 128-char name rejected', () => {
+  const name = 'a' + 'b'.repeat(127);
+  assert.strictEqual(validateUsername(name), false);
 });
 
 // ── Summary ───────────────────────────────────────────────────────────────────

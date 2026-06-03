@@ -319,6 +319,10 @@ html, body {
 </style>
 </head>
 <body>
+<script>
+/* Auth gate — redirect to login if no valid session token */
+(function(){var t=sessionStorage.getItem('cl-auth');if(!t){location.replace('/login.html');return;}try{var p=t.split('.');if(p.length!==3)throw 0;var pad=p[1].replace(/-/g,'+').replace(/_/g,'/');var pl=JSON.parse(atob(pad+'==='.slice(0,(4-pad.length%4)%4)));if(!pl.exp||Date.now()/1000>pl.exp)throw 0;}catch(e){sessionStorage.removeItem('cl-auth');location.replace('/login.html');}})();
+</script>
 
 <div id="bar"></div>
 <div id="deck">

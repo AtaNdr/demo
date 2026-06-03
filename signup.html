@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CodeLegion — Initial Setup</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --gold: #C9A84C;
+  --bg: #0A0A0A;
+  --card: #161616;
+  --border: #2E2E2E;
+  --border2: #3A3A3A;
+  --silver: #888;
+  --off: #D8D8D8;
+  --white: #FFFFFF;
+  --red: #E03E3E;
+}
+
+html, body {
+  height: 100%; width: 100%;
+  font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  overflow: hidden;
+}
+
+body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(ellipse 70% 55% at 50% 50%, rgba(201, 168, 76, 0.07) 0%, transparent 68%),
+    repeating-linear-gradient(0deg,   transparent, transparent 39px, rgba(201, 168, 76, 0.045) 39px, rgba(201, 168, 76, 0.045) 40px),
+    repeating-linear-gradient(90deg,  transparent, transparent 39px, rgba(201, 168, 76, 0.045) 39px, rgba(201, 168, 76, 0.045) 40px);
+  box-shadow: inset 0 0 200px rgba(0, 0, 0, 0.9);
+}
+
+.glass-card {
+  position: relative;
+  width: min(420px, calc(100vw - 32px));
+  padding: 44px 40px 40px;
+  background: rgba(14, 14, 14, 0.72);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4);
+  backdrop-filter: blur(24px) saturate(1.4);
+  border: 1px solid rgba(201, 168, 76, 0.22);
+  border-top: 2px solid var(--gold);
+  box-shadow:
+    0 32px 80px rgba(0, 0, 0, 0.75),
+    0 0 0 1px rgba(255, 255, 255, 0.03),
+    0 0 60px rgba(201, 168, 76, 0.06);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .glass-card {
+    animation: card-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+}
+
+@keyframes card-in {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.brand-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 3.5px;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 10px;
+}
+
+.brand-name {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--white);
+  line-height: 1.1;
+  margin-bottom: 6px;
+}
+
+.brand-sub {
+  font-size: 13px;
+  color: var(--silver);
+  margin-bottom: 32px;
+}
+
+.rule {
+  width: 48px;
+  height: 2px;
+  background: var(--gold);
+  margin-bottom: 28px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 18px;
+}
+
+.field label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.field input {
+  height: 44px;
+  padding: 0 14px;
+  background: rgba(10, 10, 10, 0.7);
+  border: 1px solid var(--border2);
+  color: var(--off);
+  font-family: inherit;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.15s;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.field input::placeholder {
+  color: var(--silver);
+  opacity: 0.6;
+}
+
+.field input:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 2px rgba(201, 168, 76, 0.18);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .field input { transition: none; }
+}
+
+.btn-submit {
+  width: 100%;
+  height: 44px;
+  margin-top: 8px;
+  background: none;
+  border: 1px solid var(--border2);
+  color: var(--off);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.btn-submit:hover:not(:disabled) {
+  background: var(--gold);
+  color: #1a1000;
+  border-color: var(--gold);
+}
+
+.btn-submit:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+.btn-submit:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-submit { transition: none; }
+}
+
+.msg {
+  display: none;
+  margin-top: 16px;
+  padding: 12px 14px;
+  font-size: 13px;
+  border-left: 3px solid var(--red);
+  background: rgba(224, 62, 62, 0.08);
+  color: var(--off);
+  line-height: 1.4;
+}
+
+.msg.visible { display: block; }
+.msg.success { border-left-color: var(--gold); background: rgba(201, 168, 76, 0.08); }
+</style>
+</head>
+<body>
+
+<main class="glass-card" role="main" aria-label="CodeLegion initial setup">
+  <p class="brand-label">Initial Setup</p>
+  <h1 class="brand-name">CodeLegion</h1>
+  <p class="brand-sub">Create your access credentials to continue</p>
+  <div class="rule" aria-hidden="true"></div>
+
+  <form id="signup-form" novalidate>
+    <div class="field">
+      <label for="username">Username</label>
+      <input
+        id="username"
+        name="username"
+        type="text"
+        autocomplete="username"
+        placeholder="Choose a username"
+        required
+        spellcheck="false"
+        autocorrect="off"
+        autocapitalize="none"
+      >
+    </div>
+
+    <div class="field">
+      <label for="password">Password</label>
+      <input
+        id="password"
+        name="password"
+        type="password"
+        autocomplete="new-password"
+        placeholder="Choose a password"
+        required
+      >
+    </div>
+
+    <div class="field">
+      <label for="confirm-password">Confirm Password</label>
+      <input
+        id="confirm-password"
+        name="confirm-password"
+        type="password"
+        autocomplete="new-password"
+        placeholder="Repeat your password"
+        required
+      >
+    </div>
+
+    <button id="submit-btn" class="btn-submit" type="submit">Create Account</button>
+
+    <div id="msg" class="msg" role="alert" aria-live="polite"></div>
+  </form>
+</main>
+
+<script>
+(function () {
+  'use strict';
+
+  var form = document.getElementById('signup-form');
+  var usernameInput = document.getElementById('username');
+  var passwordInput = document.getElementById('password');
+  var confirmInput = document.getElementById('confirm-password');
+  var submitBtn = document.getElementById('submit-btn');
+  var msgEl = document.getElementById('msg');
+
+  function showMsg(text, isError) {
+    msgEl.textContent = text;
+    msgEl.className = 'msg visible' + (isError ? '' : ' success');
+  }
+
+  function clearMsg() {
+    msgEl.className = 'msg';
+    msgEl.textContent = '';
+  }
+
+  function setLoading(loading) {
+    submitBtn.disabled = loading;
+    submitBtn.textContent = loading ? 'Creating account…' : 'Create Account';
+  }
+
+  // If already configured, redirect to login
+  fetch('/api/status')
+    .then(function (res) { return res.json(); })
+    .then(function (data) {
+      if (data && data.isSetup === true) {
+        location.replace('/login.html');
+      }
+    })
+    .catch(function () { /* network error — let user attempt signup and get a clear error */ });
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    clearMsg();
+
+    var username = usernameInput.value.trim();
+    var password = passwordInput.value;
+    var confirm = confirmInput.value;
+
+    if (!username || !password || !confirm) {
+      showMsg('All fields are required.', true);
+      return;
+    }
+
+    if (password !== confirm) {
+      showMsg('Passwords do not match.', true);
+      confirmInput.value = '';
+      confirmInput.focus();
+      return;
+    }
+
+    setLoading(true);
+
+    fetch('/api/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: username, password: password }),
+    })
+      .then(function (res) {
+        return res.json().then(function (data) {
+          return { status: res.status, data: data };
+        });
+      })
+      .then(function (result) {
+        if (result.status === 201) {
+          showMsg('Account created. Redirecting to login…', false);
+          setTimeout(function () { location.replace('/login.html'); }, 800);
+        } else if (result.status === 409) {
+          showMsg('System is already configured. Redirecting to login…', false);
+          setTimeout(function () { location.replace('/login.html'); }, 1200);
+        } else {
+          var msg = result.data && result.data.error ? result.data.error : 'Setup failed. Please try again.';
+          showMsg(msg, true);
+          setLoading(false);
+        }
+      })
+      .catch(function () {
+        showMsg('Could not reach the server. Check your connection and try again.', true);
+        setLoading(false);
+      });
+  });
+
+  usernameInput.focus();
+})();
+</script>
+</body>
+</html>

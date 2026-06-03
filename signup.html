@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CodeLegion — Secure Access</title>
+<title>CodeLegion — Initial Setup</title>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -27,7 +27,6 @@ html, body {
   overflow: hidden;
 }
 
-/* ── BACKGROUND — CSS command-center grid with gold glow ── */
 body {
   display: flex;
   align-items: center;
@@ -37,11 +36,9 @@ body {
     radial-gradient(ellipse 70% 55% at 50% 50%, rgba(201, 168, 76, 0.07) 0%, transparent 68%),
     repeating-linear-gradient(0deg,   transparent, transparent 39px, rgba(201, 168, 76, 0.045) 39px, rgba(201, 168, 76, 0.045) 40px),
     repeating-linear-gradient(90deg,  transparent, transparent 39px, rgba(201, 168, 76, 0.045) 39px, rgba(201, 168, 76, 0.045) 40px);
-  /* Outer edge vignette */
   box-shadow: inset 0 0 200px rgba(0, 0, 0, 0.9);
 }
 
-/* ── GLASSMORPHISM CARD ── */
 .glass-card {
   position: relative;
   width: min(420px, calc(100vw - 32px));
@@ -68,7 +65,6 @@ body {
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ── BRANDING ── */
 .brand-label {
   font-size: 10px;
   font-weight: 700;
@@ -99,7 +95,6 @@ body {
   margin-bottom: 28px;
 }
 
-/* ── FORM ── */
 .field {
   display: flex;
   flex-direction: column;
@@ -143,7 +138,6 @@ body {
   .field input { transition: none; }
 }
 
-/* ── SUBMIT ── */
 .btn-submit {
   width: 100%;
   height: 44px;
@@ -180,7 +174,6 @@ body {
   .btn-submit { transition: none; }
 }
 
-/* ── ERROR / SUCCESS MESSAGES ── */
 .msg {
   display: none;
   margin-top: 16px;
@@ -198,13 +191,13 @@ body {
 </head>
 <body>
 
-<main class="glass-card" role="main" aria-label="CodeLegion login">
-  <p class="brand-label">Secure Access</p>
+<main class="glass-card" role="main" aria-label="CodeLegion initial setup">
+  <p class="brand-label">Initial Setup</p>
   <h1 class="brand-name">CodeLegion</h1>
-  <p class="brand-sub">Autonomous agent fleet for GitHub issue resolution</p>
+  <p class="brand-sub">Create your access credentials to continue</p>
   <div class="rule" aria-hidden="true"></div>
 
-  <form id="login-form" novalidate>
+  <form id="signup-form" novalidate>
     <div class="field">
       <label for="username">Username</label>
       <input
@@ -212,7 +205,7 @@ body {
         name="username"
         type="text"
         autocomplete="username"
-        placeholder="Enter your username"
+        placeholder="Choose a username"
         required
         spellcheck="false"
         autocorrect="off"
@@ -226,13 +219,25 @@ body {
         id="password"
         name="password"
         type="password"
-        autocomplete="current-password"
-        placeholder="Enter your password"
+        autocomplete="new-password"
+        placeholder="Choose a password"
         required
       >
     </div>
 
-    <button id="submit-btn" class="btn-submit" type="submit">Sign in</button>
+    <div class="field">
+      <label for="confirm-password">Confirm Password</label>
+      <input
+        id="confirm-password"
+        name="confirm-password"
+        type="password"
+        autocomplete="new-password"
+        placeholder="Repeat your password"
+        required
+      >
+    </div>
+
+    <button id="submit-btn" class="btn-submit" type="submit">Create Account</button>
 
     <div id="msg" class="msg" role="alert" aria-live="polite"></div>
   </form>
@@ -242,9 +247,10 @@ body {
 (function () {
   'use strict';
 
-  var form = document.getElementById('login-form');
+  var form = document.getElementById('signup-form');
   var usernameInput = document.getElementById('username');
   var passwordInput = document.getElementById('password');
+  var confirmInput = document.getElementById('confirm-password');
   var submitBtn = document.getElementById('submit-btn');
   var msgEl = document.getElementById('msg');
 
@@ -260,57 +266,18 @@ body {
 
   function setLoading(loading) {
     submitBtn.disabled = loading;
-    submitBtn.textContent = loading ? 'Signing in…' : 'Sign in';
+    submitBtn.textContent = loading ? 'Creating account…' : 'Create Account';
   }
 
-  // Decode JWT payload (no signature verification — expiry only)
-  function tokenExpired(token) {
-    try {
-      var parts = token.split('.');
-      if (parts.length !== 3) return true;
-      var pad = parts[1].replace(/-/g, '+').replace(/_/g, '/');
-      var json = atob(pad + '==='.slice(0, (4 - pad.length % 4) % 4));
-      var payload = JSON.parse(json);
-      return !payload.exp || (Date.now() / 1000) > payload.exp;
-    } catch (e) {
-      return true;
-    }
-  }
-
-  // If already authenticated, skip the login page
-  var existing = sessionStorage.getItem('cl-auth');
-  if (existing && !tokenExpired(existing)) {
-    location.replace('/');
-    return;
-  }
-
-  // Check setup status before showing form — redirect to signup on first run
-  submitBtn.textContent = 'Checking…';
-  submitBtn.disabled = true;
-  usernameInput.disabled = true;
-  passwordInput.disabled = true;
-
+  // If already configured, redirect to login
   fetch('/api/status')
     .then(function (res) { return res.json(); })
     .then(function (data) {
-      if (data && data.isSetup === false) {
-        location.replace('/signup.html');
-        return;
+      if (data && data.isSetup === true) {
+        location.replace('/login.html');
       }
-      submitBtn.textContent = 'Sign in';
-      submitBtn.disabled = false;
-      usernameInput.disabled = false;
-      passwordInput.disabled = false;
-      usernameInput.focus();
     })
-    .catch(function () {
-      // If the status check fails, assume setup is done and let the user try to log in
-      submitBtn.textContent = 'Sign in';
-      submitBtn.disabled = false;
-      usernameInput.disabled = false;
-      passwordInput.disabled = false;
-      usernameInput.focus();
-    });
+    .catch(function () { /* network error — let user attempt signup and get a clear error */ });
 
   form.addEventListener('submit', function (e) {
     e.preventDefault();
@@ -318,15 +285,23 @@ body {
 
     var username = usernameInput.value.trim();
     var password = passwordInput.value;
+    var confirm = confirmInput.value;
 
-    if (!username || !password) {
-      showMsg('Username and password are required.', true);
+    if (!username || !password || !confirm) {
+      showMsg('All fields are required.', true);
+      return;
+    }
+
+    if (password !== confirm) {
+      showMsg('Passwords do not match.', true);
+      confirmInput.value = '';
+      confirmInput.focus();
       return;
     }
 
     setLoading(true);
 
-    fetch('/api/login', {
+    fetch('/api/signup', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username: username, password: password }),
@@ -337,16 +312,16 @@ body {
         });
       })
       .then(function (result) {
-        if (result.status === 200 && result.data.token) {
-          showMsg('Access granted. Redirecting…', false);
-          sessionStorage.setItem('cl-auth', result.data.token);
-          setTimeout(function () { location.replace('/'); }, 400);
+        if (result.status === 201) {
+          showMsg('Account created. Redirecting to login…', false);
+          setTimeout(function () { location.replace('/login.html'); }, 800);
+        } else if (result.status === 409) {
+          showMsg('System is already configured. Redirecting to login…', false);
+          setTimeout(function () { location.replace('/login.html'); }, 1200);
         } else {
-          var msg = result.data && result.data.error ? result.data.error : 'Login failed. Please try again.';
+          var msg = result.data && result.data.error ? result.data.error : 'Setup failed. Please try again.';
           showMsg(msg, true);
           setLoading(false);
-          passwordInput.value = '';
-          passwordInput.focus();
         }
       })
       .catch(function () {
@@ -354,6 +329,8 @@ body {
         setLoading(false);
       });
   });
+
+  usernameInput.focus();
 })();
 </script>
 </body>

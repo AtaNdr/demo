@@ -3,6 +3,10 @@
     {
       "route": "/login.html",
       "allowedRoles": ["anonymous"]
+    },
+    {
+      "route": "/signup.html",
+      "allowedRoles": ["anonymous"]
     }
   ],
   "globalHeaders": {

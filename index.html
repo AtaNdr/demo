@@ -314,8 +314,40 @@ html, body {
 .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--border2); cursor: pointer; transition: background 0.2s, transform 0.2s; }
 .dot.on { background: var(--gold); transform: scale(1.5); }
 
+/* ── FOCUS STYLES ── */
+.nav-btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
 /* ── PROGRESS ── */
 #bar { position: fixed; top: 0; left: 0; height: 2px; background: var(--gold); transition: width 0.35s ease; z-index: 200; }
+
+/* ── DATE/TIME MODAL ── */
+#datetime-modal {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.75);
+  z-index: 300;
+  align-items: center; justify-content: center;
+}
+#datetime-modal-box {
+  background: var(--card);
+  border: 1px solid var(--border2);
+  border-top: 3px solid var(--gold);
+  padding: 32px 36px;
+  max-width: 360px; width: 90%;
+}
+#datetime-modal-heading {
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 2px; text-transform: uppercase;
+  color: var(--gold); margin-bottom: 16px;
+}
+#modal-time {
+  font-size: 42px; font-weight: 700;
+  color: var(--white); line-height: 1.1;
+  margin-bottom: 8px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 1px;
+}
+#modal-date { font-size: 14px; color: var(--silver); margin-bottom: 28px; }
+#datetime-close { width: 100%; min-height: 44px; padding: 11px 28px; }
 </style>
 </head>
 <body>
@@ -336,6 +368,13 @@ html, body {
       <div class="pill"><span class="pill-val">~3 min</span><span class="pill-lbl">Time to first PR</span></div>
       <div class="pill"><span class="pill-val">$0.03 – $0.30</span><span class="pill-lbl">Per task cost</span></div>
       <div class="pill"><span class="pill-val">&lt; 15 min</span><span class="pill-lbl">To deploy on Azure</span></div>
+    </div>
+    <div style="display:flex;justify-content:center;margin-top:20px;">
+      <button id="datetime-btn" class="nav-btn"
+              style="border-color:var(--gold);min-height:44px;padding:11px 28px;"
+              aria-haspopup="dialog">
+        Show Date &amp; Time
+      </button>
     </div>
   </div>
 </div>
@@ -702,6 +741,20 @@ html, body {
 
 </div><!-- /deck -->
 
+<!-- ─── DATE/TIME MODAL ─── -->
+<div id="datetime-modal"
+     role="dialog"
+     aria-modal="true"
+     aria-labelledby="datetime-modal-heading"
+     style="display:none;">
+  <div id="datetime-modal-box">
+    <div id="datetime-modal-heading">Current Date &amp; Time</div>
+    <div id="modal-time">--:--:--</div>
+    <div id="modal-date">---</div>
+    <button id="datetime-close" class="nav-btn">Close</button>
+  </div>
+</div>
+
 <!-- ─── NAV ─── -->
 <div id="nav">
   <button class="nav-btn" id="prev" onclick="go(-1)" disabled>← Prev</button>
@@ -769,6 +822,53 @@ html, body {
   });
 
   render();
+})();
+
+// Date/Time modal
+(function(){
+  var btn    = document.getElementById('datetime-btn');
+  var modal  = document.getElementById('datetime-modal');
+  var closeB = document.getElementById('datetime-close');
+  var timeEl = document.getElementById('modal-time');
+  var dateEl = document.getElementById('modal-date');
+  var tick   = null;
+
+  var DAYS   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  var MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+  function pad(n){ return n < 10 ? '0' + n : String(n); }
+
+  function refresh(){
+    var d = new Date();
+    timeEl.textContent = pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
+    dateEl.textContent = DAYS[d.getDay()] + ', ' + MONTHS[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
+  }
+
+  function openModal(){
+    modal.style.display = 'flex';
+    refresh();
+    tick = setInterval(refresh, 1000);
+    closeB.focus();
+    document.addEventListener('keydown', onKey, true);
+  }
+
+  function closeModal(){
+    modal.style.display = 'none';
+    clearInterval(tick);
+    tick = null;
+    document.removeEventListener('keydown', onKey, true);
+    btn.focus();
+  }
+
+  function onKey(e){
+    if(e.key === 'Escape'){ closeModal(); e.stopImmediatePropagation(); return; }
+    if(e.key === 'Tab'){ e.preventDefault(); closeB.focus(); }
+    e.stopImmediatePropagation();
+  }
+
+  btn.addEventListener('click', openModal);
+  closeB.addEventListener('click', closeModal);
+  modal.addEventListener('click', function(e){ if(e.target === modal) closeModal(); });
 })();
 </script>
 </body>
